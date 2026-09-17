@@ -1,3 +1,5 @@
+## Changes
+
 Se agrego conexión con Yahoo Market
 
 ![Stonkfly: a pixel fly beside a candlestick chart](assets/stonkfly.png)
