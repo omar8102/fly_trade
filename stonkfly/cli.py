@@ -2,7 +2,6 @@
 
 import argparse
 import dataclasses
-import fcntl
 import hashlib
 import json
 import os
@@ -53,7 +52,7 @@ def main():
         "--products",
         nargs="+",
         default=["BTC-USDC"],
-        choices=["BTC-USDC", "ETH-USDC", "SOL-USDC"],
+        choices=["BTC-USDC", "ETH-USDC", "SOL-USDC", "ORCL"],
     )
     run.add_argument("--neural-ms", type=float, default=500)
     status = sub.add_parser("status")
@@ -108,8 +107,13 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     lock = (out / "worker.lock").open("a")
     try:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
+        if os.name == 'nt':
+            import msvcrt
+            msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except (BlockingIOError, OSError):
         raise SystemExit("A worker already owns this run directory")
     from .broker import CoinbaseBroker, PaperBroker
     from .ledger import Ledger
@@ -141,16 +145,17 @@ def main():
 
         from .actions import StonkflyActions
         from .display import market_frame
-        from .market import CoinbaseMarket, FixtureMarket
+        from .market import CoinbaseMarket, FixtureMarket, YahooFinanceMarket
         from .neural.controller import FlyController
         from .reinforcement import reinforcement
         from .risk import Guard, Veto
 
-        market = (
-            FixtureMarket(settings.products)
-            if a.fixture
-            else CoinbaseMarket(settings.products)
-        )
+        if a.fixture:
+            market = FixtureMarket(settings.products)
+        elif "ORCL" in settings.products:
+            market = YahooFinanceMarket(settings.products)
+        else:
+            market = CoinbaseMarket(settings.products)
         previous = ledger.get("observation")
         if previous:
             market.history = previous["market_history"]

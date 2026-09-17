@@ -47,9 +47,9 @@ class Settings:
         if (
             not self.products
             or len(set(self.products)) != len(self.products)
-            or not set(self.products) <= set(("BTC-USDC", "ETH-USDC", "SOL-USDC"))
+            or not set(self.products) <= set(("BTC-USDC", "ETH-USDC", "SOL-USDC", "ORCL"))
         ):
-            raise ValueError("Only allowlisted USDC spot pairs")
+            raise ValueError("Only allowlisted USDC spot pairs or ORCL")
         if not 0 < D(self.capital) <= 100 or not 0 < D(self.order_limit) <= min(
             D(self.capital), D(10)
         ):

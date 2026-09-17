@@ -166,5 +166,62 @@ class FixtureMarket:
                 ]
         self.tick += 1
         return quotes
+    record = CoinbaseMarket.record
+
+
+class YahooFinanceMarket:
+    def __init__(self, products):
+        self.products = products
+        self.history = {p: [] for p in products}
+
+    def snapshot(self):
+        import yfinance as yf
+        result = {}
+        for product in self.products:
+            ticker = yf.Ticker(product)
+            if not self.history[product]:
+                hist = ticker.history(period="1d", interval="1m")
+                if hist.empty:
+                    raise RuntimeError(f"No historical data for {product}")
+                closes = hist['Close'].tolist()
+                self.history[product] = [float(D(str(c))) for c in closes[-120:]]
+            
+            info = ticker.info
+            price_val = info.get('currentPrice') or info.get('previousClose') or info.get('regularMarketPrice')
+            if not price_val:
+                hist = ticker.history(period="1d")
+                if hist.empty:
+                    raise RuntimeError(f"Cannot determine price for {product}")
+                price_val = hist['Close'].iloc[-1]
+
+            bid_val = info.get('bid') or price_val
+            ask_val = info.get('ask') or price_val
+
+            bid = D(str(bid_val))
+            ask = D(str(ask_val))
+            
+            if bid == 0 or ask == 0:
+                price = D(str(price_val))
+                bid = price * D('0.9995')
+                ask = price * D('1.0005')
+
+            if bid > ask:
+                bid, ask = ask, bid
+            if bid == ask:
+                ask = bid * D('1.0001')
+
+            quote = Quote(
+                product,
+                bid,
+                ask,
+                time.time(),
+                D("0.00001"),
+                D("0.01"),
+                D("0.01"),
+                D("1"),
+                D("0.00001"),
+            )
+            result[product] = quote
+        return result
 
     record = CoinbaseMarket.record
