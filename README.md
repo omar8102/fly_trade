@@ -3,6 +3,7 @@
 Se agrego conexión con Yahoo Market
 se configuro para que haga trade con las acciones de Oracle 
 Cambio Fetch
+Otro prueba con Fetch
 
 ![Stonkfly: a pixel fly beside a candlestick chart](assets/stonkfly.png)
 
