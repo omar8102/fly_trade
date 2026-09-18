@@ -1,6 +1,7 @@
 ## Changes
 
 Se agrego conexión con Yahoo Market
+se configuro para que haga trade con las acciones de Oracle 
 
 ![Stonkfly: a pixel fly beside a candlestick chart](assets/stonkfly.png)
 
